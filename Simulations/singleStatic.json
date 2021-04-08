@@ -1,0 +1,8 @@
+{
+    "domainSize": [100,100],
+    "objects": [
+    {"type":"Person",
+    "startingPixel":[10,10],
+    "movementType":"Static"}
+    ]
+}

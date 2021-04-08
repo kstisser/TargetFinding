@@ -1,0 +1,17 @@
+{
+    "domainSize": [100,100],
+    "objects": [
+    {"type":"Person",
+    "startingPixel":[20,10],
+    "movementType":"Linear",
+    "movementDirection": "VerticalUp"},
+    {"type":"Person",
+    "startingPixel":[70,60],
+    "movementType":"Pacing",
+    "distance": 10},
+    {"type":"Car",
+    "startingPixel":[30,70],
+    "movementType":"Circle",
+    "radius": 20}
+    ]
+}
