@@ -1,8 +1,7 @@
 import defs
 
 class Mover:
-    def __init__(self, objectType, movementType, startPoint, domainSize, pacelength=0, radius=10, movementDirection=defs.MovementDirection.HORIZONTALRIGHT):
-        self.objectType = objectType        
+    def __init__(self, movementType, startPoint, domainSize, pacelength=0, radius=10, movementDirection=defs.MovementDirection.HORIZONTALRIGHT):
         self.movementType = movementType
         self.startPoint = startPoint
         self.domainSize = domainSize

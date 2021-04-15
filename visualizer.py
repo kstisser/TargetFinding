@@ -5,11 +5,11 @@ class Visualizer:
     def __init__(self):
         print("Opening visualizer")
 
-    def plotPlane(self, plane):
+    def plotPlane(self, X, Y, plane):
         fig = plt.figure()
         ax = fig.gca(projection='3d')
-        ax.plot_surface(plane, 
-                        cmap=cm.coolwarm,
+        ax.plot_surface(X, Y, plane, 
+                        cmap=plt.cm.coolwarm,
                         linewidth=0,
                         antialiased=True)
         ax.set_xlabel('x space')

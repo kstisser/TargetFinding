@@ -1,5 +1,10 @@
 from enum import Enum
 
+class QuadratureType(Enum):
+    CUBIC = 1
+    GAUSSIANQUADRATURE = 2
+    NEWCODES = 3
+
 class ObjectType(Enum):
     PERSON = 1
     CAR = 1

@@ -7,6 +7,7 @@ class PeakFinder:
 
     def getSecondDerivative(self):
         self.secondDer = laplace(self.mergedPlane)
+        print(self.secondDer)
         return self.secondDer
 
     def getPeaks(self, threshold):
