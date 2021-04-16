@@ -2,7 +2,7 @@
     "domainSize": [100,100],
     "objects": [
     {"size":1,
-    "startingPixel":[10,10],
+    "startingPixel":[50,50],
     "movementType":"Static"}
     ]
 }

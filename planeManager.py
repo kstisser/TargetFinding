@@ -7,12 +7,13 @@ import visualizer
 from PIL import Image as im
 
 class PlaneManager:
-    def __init__(self, movers, domainSize, singlePoint = True, display=False):
+    def __init__(self, movers, domainSize, peakThreshold = 0.1, resolution = 5, singlePoint = True, display=False):
         self.viz = visualizer.Visualizer()
         self.movers = movers
         self.domainSize = domainSize
         self.singlePoint = singlePoint
-        self.peakThreshold = 1
+        self.peakThreshold = peakThreshold
+        self.resolution = resolution
         self.planeQueue = []
         self.decayWeights = np.array([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
         self.decayWeights = self.decayWeights/np.sum(self.decayWeights)
@@ -23,6 +24,15 @@ class PlaneManager:
             plt.plot(range(0,len(self.decayWeights),1), self.decayWeights, 'go')
             plt.title("Decay weights")
             plt.show()
+
+    def updateThreshold(self, threshold):
+        self.peakThreshold = threshold
+
+    def updateResolution(self, res):
+        self.resolution = res
+
+    def updateSize(self, size):
+        self.size = size
 
     #add a plane to the queue, though ensure the queue does not exceed 10 planes
     def addPlane(self, plane):
@@ -50,7 +60,14 @@ class PlaneManager:
         mergedPlanes = merger.mergePlanes()
         pf = peakFinder.PeakFinder(mergedPlanes)
         secondDerivImage = pf.getSecondDerivative()
+        print("Nonzero values in second derivative: ", np.count_nonzero(secondDerivImage)) 
+        print(secondDerivImage.shape)
+        #img = im.fromarray(secondDerivImage, 'RGB')
+        #img.show()        
         peaks = pf.getPeaks(self.peakThreshold)
-        quadrature = qc.QuadratureCalculator(self.planeQueue, mergedPlanes, peaks)
-        areas = quadrature.getAreas(size, N)
+        areas = None
+        print(peaks)
+        if len(peaks) > 0:
+            quadrature = qc.QuadratureCalculator(self.planeQueue, mergedPlanes, peaks, self.resolution)
+            areas = quadrature.getAreas(size, N)
         return self.planeQueue, mergedPlanes, secondDerivImage, peaks, areas
