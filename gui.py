@@ -12,38 +12,42 @@ from scipy.stats import multivariate_normal
 import cv2
 
 class GuiManager:
-    def __init__(self, movers, domainSize, runRate):
+    def __init__(self, movers, domainSize, runRate, noise=False):
         self.runRate = runRate
-        self.resolution = domainSize[0]
-        self.threshold = 1
+        self.resolution = 16
+        self.threshold = 0.5
         self.size = 5
         self.tkGui = tk.Tk()
         w, h = self.tkGui.winfo_screenwidth(), self.tkGui.winfo_screenheight()
         self.tkGui.geometry("%dx%d+0+0" % (w, h))
         self.wholeFrame = tk.Frame(master = self.tkGui)
         self.addWidgets()
-        self.pm = planeManager.PlaneManager(movers, domainSize)
+        self.pm = planeManager.PlaneManager(movers, domainSize, noise)
         self.X = np.arange(0, domainSize[1])
         self.Y = np.arange(0, domainSize[0])
         self.X, self.Y = np.meshgrid(self.X, self.Y)
+        self.noise = noise
         
     def runGUI(self):
         self.tkGui.mainloop()
 
-    def moveTargetAndGetAreas(self):
-        #while True:
-        startTime = time.time()
-        self.pm.plotMoversWithNewTimestep()
-        r = self.resolution
-        s = self.size
-        t = self.threshold
-        rate = self.runRate
-        separatedPlanes, mergedPlanes, secondDerivative, peaks, areas = self.pm.mergePlanes(r, s, t)
-        self.updatePlots(separatedPlanes, mergedPlanes, secondDerivative, peaks, areas)
-        #sleep amount of time still needed after processing to get to the run rate
-        waitTime = rate - (time.time() - startTime)
-        if waitTime > 0:
-            time.sleep(waitTime) 
+    def start(self):
+        while True:
+            startTime = time.time()
+            self.pm.plotMoversWithNewTimestep()
+            r = self.resolution
+            s = self.size
+            t = self.threshold
+            rate = self.runRate
+            separatedPlanes, mergedPlanes, secondDerivative, peaks, areas = self.pm.mergePlanes(r, s, t)
+            self.updatePlots(separatedPlanes, mergedPlanes, secondDerivative, peaks, areas)
+            self.tkGui.update()
+            #sleep amount of time still needed after processing to get to the run rate
+            endTime = time.time()
+            print("Process time: ", (endTime - startTime))
+            waitTime = rate - (time.time() - startTime)
+            if waitTime > 0:
+                time.sleep(waitTime) 
 
     def getTestXYZ(self, sigmaVal):
         x, y = np.mgrid[-1.0:1.0:30j, -1.0:1.0:30j]
@@ -62,40 +66,15 @@ class GuiManager:
         z = z.reshape(x.shape)
         return x,y,z
 
+    #used for testing
     def updatePlot(self):
         time.sleep(3)
         self.fig.clear()
         x, y, z = self.getTestXYZ(0.2)
         self.ax = self.fig.add_subplot(111, projection='3d')
         self.ax.plot_surface(x,y,z, color='green')
-        self.movers0Plane.draw_idle()
-
-    def start(self):
-        #self.pm.plotMoversWithNewTimestep()
-        #separatedPlanes, mergedPlanes, secondDerivative, peaks, areas = self.pm.mergePlanes(self.resolution, self.size, self.threshold)
-        #self.updatePlots(separatedPlanes, mergedPlanes, secondDerivative, peaks, areas)
+        self.movers0Plane.draw_idle()  
         
-        self.targetThread = threading.Thread(target=self.moveTargetAndGetAreas)
-        self.targetThread.start()
-        #self.moveTargetAndGetAreas()
-
-        '''x, y, z = self.getTestXYZ(0.5)
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111, projection='3d')
-        self.ax.plot_surface(x,y,z)
-        self.wholeFrame.grid(row=1, column=1, padx=5, pady=5)
-        self.movers0Plane = FigureCanvasTkAgg(self.fig, master = self.wholeFrame)
-        self.movers0Plane.draw()
-        self.navMovers0Plane = NavigationToolbar2Tk(self.movers0Plane, self.wholeFrame, pack_toolbar=False)
-        self.navMovers0Plane.update()
-        self.navMovers0Plane.pack(side=tk.BOTTOM, fill=tk.X)
-        self.movers0Plane.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
-
-        self.targetThread = threading.Thread(target=self.updatePlot)
-        self.targetThread.start()'''
-        self.tkGui.mainloop()    
-        
-
     def updatePlots(self, separatedPlanes, mergedPlanes, secondDerivative, peaks, areas):
         self.fig.clear()
         #plot each plot
@@ -121,18 +100,18 @@ class GuiManager:
         #print("X shape: ", self.X.shape, ", Y shape: ", self.Y.shape, " merged planes shape: ", mergedPlanes.shape)
         self.axMerged = self.fig.add_subplot(3, 4, 2, projection='3d')
         self.axMerged.plot_surface(self.X, self.Y, mergedPlanes, 
-                        cmap=plt.cm.coolwarm,
+                        cmap=plt.cm.cool,
                         linewidth=0,
                         antialiased=True)
         self.axMerged.set_title("Merged Planes")
 
         #2nd Derivative
-        self.axDeriv = self.fig.add_subplot(3, 4, 10)
+        self.axDeriv = self.fig.add_subplot(3, 4, 6)
         self.axDeriv.imshow(secondDerivative)
         self.axDeriv.set_title("2nd Derivative")
 
         #peaks
-        self.axPeaks = self.fig.add_subplot(3, 4, 6)
+        self.axPeaks = self.fig.add_subplot(3, 4, 10)
         peaksImg = np.zeros(mergedPlanes.shape)
         if len(peaks) > 0:
             for p in peaks:
@@ -156,17 +135,17 @@ class GuiManager:
         self.axGaussianQuadrature.set_title("Gaussian Quadrature Area")
 
         #probability of objects- cubic area
-        self.axProbCubic = self.fig.add_subplot(3, 4, 4)
+        self.axProbCubic = self.fig.add_subplot(3, 4, 4, projection='3d')
         probCubicImg = np.zeros(mergedPlanes.shape)
         self.axProbCubic.set_title("Cube Targets Thresholded")
 
         #probability of objects- NewCotes area
-        self.axProbNewCotes = self.fig.add_subplot(3, 4, 8)
+        self.axProbNewCotes = self.fig.add_subplot(3, 4, 8, projection='3d')
         probNewCotesImg = np.zeros(mergedPlanes.shape)
         self.axProbNewCotes.set_title("New Cotes Targets Thresholded")
 
         #probability of objects- Gaussian Quadrature
-        self.axProbGaussianQuadrature = self.fig.add_subplot(3, 4, 12)
+        self.axProbGaussianQuadrature = self.fig.add_subplot(3, 4, 12, projection='3d')
         probGaussianQuadratureImg = np.zeros(mergedPlanes.shape)
         self.axProbGaussianQuadrature.set_title("Gaussian Quadrature Targets Thresholded")
 
@@ -177,33 +156,61 @@ class GuiManager:
                 newCotesArea = areas[peakKey].newCotesSum
                 gaussianQuadratureArea = areas[peakKey].gaussianQuadratureSum
 
-                cubicProb = cubicArea if cubicArea >= self.threshold else 0
-                newCotesProb = newCotesArea if newCotesArea >= self.threshold else 0
-                gaussianQuadratureProb = gaussianQuadratureArea if gaussianQuadratureArea >= self.threshold else 0
-
                 x1 = int(max(peakKey[1] - self.size/2, 0))
                 x2 = int(min(peakKey[1] + self.size/2, mergedPlanes.shape[1]-1))
                 y1 = int(max(peakKey[0] - self.size/2, 0))
                 y2 = int(min(peakKey[0] + self.size/2, mergedPlanes.shape[0]-1))
 
-                cubeAreaImg[y1:y2, x1:x2] = cubicArea
-                newCotesAreaImg[y1:y2, x1:x2] = newCotesArea
-                gaussianQuadAreaImg[y1:y2, x1:x2] = gaussianQuadratureArea
+                x2Text = min(x2 + 5, cubeAreaImg.shape[1]-1)
+                y2Text = min(y2 + 5, cubeAreaImg.shape[0]-1)
+                cv2.putText(cubeAreaImg, self.truncate(cubicArea, 4), (x2Text, y2Text), cv2.FONT_HERSHEY_SIMPLEX, 0.25,(255,255,255))
+                cv2.circle(cubeAreaImg, (x2, y2), 3, (200, 200, 200),-1)
+                cv2.putText(newCotesAreaImg, self.truncate(newCotesArea, 4), (x2Text, y2Text), cv2.FONT_HERSHEY_SIMPLEX, 0.25,(255,255,255))
+                cv2.circle(newCotesAreaImg, (x2, y2), 3, (200, 200, 200),-1)
+                cv2.putText(gaussianQuadAreaImg, self.truncate(gaussianQuadratureArea, 4), (x2Text, y2Text), cv2.FONT_HERSHEY_SIMPLEX, 0.25,(255,255,255))                
+                cv2.circle(gaussianQuadAreaImg, (x2, y2), 3, (200, 200, 200),-1)
 
-                probCubicImg[y1:y2, x1:x2] = cubicProb
-                probNewCotesImg[y1:y2, x1:x2] = newCotesProb
-                probGaussianQuadratureImg[y1:y2, x1:x2] = gaussianQuadratureProb
-                cv2.putText(probCubicImg, self.truncate(cubicArea, 4), (y2,x2), cv2.FONT_HERSHEY_SIMPLEX, 0.2,(255,255,255))
-                cv2.putText(probNewCotesImg, self.truncate(newCotesArea, 4), (y2,x2), cv2.FONT_HERSHEY_SIMPLEX, 0.2,(255,255,255))
-                cv2.putText(probGaussianQuadratureImg, self.truncate(gaussianQuadratureArea, 4), (y2,x2), cv2.FONT_HERSHEY_SIMPLEX, 0.2,(255,255,255))
+                print("Cubic area: ", cubicArea, ", New Cotes area: ", newCotesArea, ", Gaussian Quadrature area: ", gaussianQuadratureArea, ", threshold: ", self.threshold)
+
+                probCubicImg[y1:y2, x1:x2] = cubicArea
+                probNewCotesImg[y1:y2, x1:x2] = newCotesArea
+                probGaussianQuadratureImg[y1:y2, x1:x2] = gaussianQuadratureArea
 
         self.axCubes.imshow(cubeAreaImg)
         self.axNewCotes.imshow(newCotesAreaImg)
         self.axGaussianQuadrature.imshow(gaussianQuadAreaImg)
 
-        self.axProbCubic.imshow(probCubicImg)
-        self.axProbNewCotes.imshow(probNewCotesImg)
-        self.axProbGaussianQuadrature.imshow(probGaussianQuadratureImg)
+        thresholdPlane = np.zeros(cubeAreaImg.shape)
+        thresholdPlane.fill(self.threshold)
+        self.axProbCubic.plot_surface(self.X, self.Y, probCubicImg, 
+                cmap=plt.cm.summer,
+                linewidth=0,
+                antialiased=True)
+
+        self.axProbCubic.plot_surface(self.X, self.Y, thresholdPlane, 
+                cmap=plt.cm.autumn,
+                linewidth=0,
+                antialiased=True)                
+
+        self.axProbNewCotes.plot_surface(self.X, self.Y, probNewCotesImg, 
+                cmap=plt.cm.ocean,
+                linewidth=0,
+                antialiased=True)
+
+        self.axProbNewCotes.plot_surface(self.X, self.Y, thresholdPlane, 
+                cmap=plt.cm.autumn,
+                linewidth=0,
+                antialiased=True)                
+
+        self.axProbGaussianQuadrature.plot_surface(self.X, self.Y, probGaussianQuadratureImg, 
+                cmap=plt.cm.inferno,
+                linewidth=0,
+                antialiased=True)
+
+        self.axProbGaussianQuadrature.plot_surface(self.X, self.Y, thresholdPlane, 
+                cmap=plt.cm.autumn,
+                linewidth=0,
+                antialiased=True)                
         
         ############################################
         #update
@@ -225,27 +232,23 @@ class GuiManager:
         self.interactiveFrame = tk.Frame(self.tkGui)
 
         #threshold slider
-        #self.interactiveFrame.grid(row=1, column=1, padx=5, pady=5)
         self.thresholdSlider = tk.Scale(self.interactiveFrame, from_=0, to=100, orient=tk.HORIZONTAL, label="Target threshold")
         self.thresholdSlider.pack()
         self.thresholdSlider.bind("ThresholdSlider", self.handleThresholdUpdate)
 
         #resolution slider
-        #self.interactiveFrame.grid(row=2, column=1, padx=5, pady=5)
-        self.resolutionSlider = tk.Scale(self.interactiveFrame, from_=10, to=1000, orient=tk.HORIZONTAL, label="Resolution (N)")
+        self.resolutionSlider = tk.Scale(self.interactiveFrame, from_=8, to=32, tickinterval=8, orient=tk.HORIZONTAL, label="Resolution (N)")
         self.resolutionSlider.set(self.resolution)
         self.resolutionSlider.pack()
         self.resolutionSlider.bind("ResolutionSlider", self.handleResolutionUpdate)
 
         #objects size
-        #self.interactiveFrame.grid(row=3, column=1, padx=5, pady=5)
         self.objectSizeSlider = tk.Scale(self.interactiveFrame, from_=1, to=100, orient=tk.HORIZONTAL, label="Object size")
         self.objectSizeSlider.set(5)
         self.objectSizeSlider.pack()
         self.objectSizeSlider.bind("ObjectSizeSlider", self.handleSizeUpdate)
 
         #run rate
-        #self.interactiveFrame.grid(row=4, column=1, padx=5, pady=5)
         self.runRateSlider = tk.Scale(self.interactiveFrame, from_=0.05, to=2, orient=tk.HORIZONTAL, label="Run rate")
         self.runRateSlider.set(self.runRate)
         self.runRateSlider.pack()

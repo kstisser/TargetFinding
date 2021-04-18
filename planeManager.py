@@ -5,9 +5,10 @@ import peakFinder
 import quadratureCalculator as qc
 import visualizer
 from PIL import Image as im
+from random import random
 
 class PlaneManager:
-    def __init__(self, movers, domainSize, peakThreshold = 0.1, resolution = 5, singlePoint = True, display=False):
+    def __init__(self, movers, domainSize, noise, peakThreshold = 1e-2, resolution = 5, singlePoint = True, display=False):
         self.viz = visualizer.Visualizer()
         self.movers = movers
         self.domainSize = domainSize
@@ -18,6 +19,7 @@ class PlaneManager:
         self.decayWeights = np.array([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
         self.decayWeights = self.decayWeights/np.sum(self.decayWeights)
         self.timeStep = 0
+        self.noise = noise
         print("Decay weight sum: ", np.sum(self.decayWeights))
         print("Decay weights: ", self.decayWeights)
         if display:
@@ -45,9 +47,15 @@ class PlaneManager:
         newPlane = np.zeros(self.domainSize)
         print('Mover number: ', len(self.movers))
         for mov in self.movers:
-            print("Last point: ", mov.lastPoint)
-            newPlane[mov.lastPoint[0], mov.lastPoint[1]] = 1
+            newPosition = mov.getPosition(self.timeStep)
+            print("New point: ", newPosition)
+            newPlane[newPosition[0], newPosition[1]] = 1
             #TODO if using multiple points for a moving object, add those based on their direction
+        #if using noise, add a few other random points
+        if self.noise:
+            randomNumberOfPoints = int(random() * 200)
+            for i in range(randomNumberOfPoints):
+                newPlane[int(random() * 100), int(random() * 100)] = 1
         self.addPlane(newPlane)
         print("New plane!")
         print("Nonzero values in new Plane: ", np.count_nonzero(newPlane)) 
@@ -68,6 +76,6 @@ class PlaneManager:
         areas = None
         print(peaks)
         if len(peaks) > 0:
-            quadrature = qc.QuadratureCalculator(self.planeQueue, mergedPlanes, peaks, self.resolution)
+            quadrature = qc.QuadratureCalculator(self.planeQueue, mergedPlanes, peaks, self.resolution, self.decayWeights)
             areas = quadrature.getAreas(size, N)
         return self.planeQueue, mergedPlanes, secondDerivImage, peaks, areas

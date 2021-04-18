@@ -4,14 +4,14 @@
     {"size":1,
     "startingPixel":[20,10],
     "movementType":"Linear",
-    "movementDirection": "VerticalUp"},
+    "movementDirection": "VerticalDown"},
     {"size":3,
-    "startingPixel":[70,60],
+    "startingPixel":[20,15],
     "movementType":"Linear",
     "movementDirection": "VerticalDown"},
     {"size":5,
-    "startingPixel":[30,70],
+    "startingPixel":[20,30],
     "movementType":"Linear",
-    "movementDirection": "DiagUpLeft"}
+    "movementDirection": "VerticalDown"}
     ]
 }
