@@ -106,7 +106,7 @@ class QuadratureCalculator:
             return False
         return True
 
-    #Simpson's rule over one subinterval
+    #Simpson's rule over one subinterval, adapted for 2d to cover a 3x3 space
     def getNewCotesArea(self, upperLeft, lowerRight):
         sum = 0
         for y in range(upperLeft[0], lowerRight[0] + 1):
@@ -118,8 +118,26 @@ class QuadratureCalculator:
                     if self.isInRange(x-1,1):
                         runningCount = runningCount + self.mergedPlanes[y,x-1]
                         countAdded = countAdded + 1
+                        if self.isInRange(y+1,0):
+                            runningCount = runningCount + self.mergedPlanes[y+1,x-1]
+                            countAdded = countAdded + 1
+                        if self.isInRange(y-1,0):
+                            runningCount = runningCount + self.mergedPlanes[y-1,x-1]
+                            countAdded = countAdded + 1                        
                     if self.isInRange(x+1,1):
                         runningCount = runningCount + self.mergedPlanes[y,x-1]
+                        countAdded = countAdded + 1
+                        if self.isInRange(y+1,0):
+                            runningCount = runningCount + self.mergedPlanes[y+1,x+1]
+                            countAdded = countAdded + 1
+                        if self.isInRange(y-1,0):
+                            runningCount = runningCount + self.mergedPlanes[y-1,x+1]
+                            countAdded = countAdded + 1
+                    if self.isInRange(y+1,0):
+                        runningCount = runningCount + self.mergedPlanes[y+1,x]
+                        countAdded = countAdded + 1
+                    if self.isInRange(y-1,0):
+                        runningCount = runningCount + self.mergedPlanes[y-1,x]
                         countAdded = countAdded + 1
                     runningCount = runningCount/countAdded
                     sum = sum + runningCount
@@ -129,7 +147,7 @@ class QuadratureCalculator:
         return sum
 
     def isInRange(self, point, axis):
-        if (point >= 0) and (point <= self.mergedPlanes.shape[axis]):
+        if (point >= 0) and (point < self.mergedPlanes.shape[axis]):
             return True
         return False
 

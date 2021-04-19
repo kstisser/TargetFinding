@@ -14,7 +14,7 @@ import cv2
 class GuiManager:
     def __init__(self, movers, domainSize, runRate, noise=False):
         self.runRate = runRate
-        self.resolution = 16
+        self.resolution = 18
         self.threshold = 0.5
         self.size = 5
         self.tkGui = tk.Tk()
@@ -232,9 +232,9 @@ class GuiManager:
         self.interactiveFrame = tk.Frame(self.tkGui)
 
         #threshold slider
-        self.thresholdSlider = tk.Scale(self.interactiveFrame, from_=0, to=100, orient=tk.HORIZONTAL, label="Target threshold")
+        '''self.thresholdSlider = tk.Scale(self.interactiveFrame, from_=0, to=100, orient=tk.HORIZONTAL, label="Target threshold")
         self.thresholdSlider.pack()
-        self.thresholdSlider.bind("ThresholdSlider", self.handleThresholdUpdate)
+        self.thresholdSlider.bind("ThresholdSlider", self.handleThresholdUpdate)'''
 
         #resolution slider
         self.resolutionSlider = tk.Scale(self.interactiveFrame, from_=8, to=32, tickinterval=8, orient=tk.HORIZONTAL, label="Resolution (N)")
@@ -243,10 +243,10 @@ class GuiManager:
         self.resolutionSlider.bind("ResolutionSlider", self.handleResolutionUpdate)
 
         #objects size
-        self.objectSizeSlider = tk.Scale(self.interactiveFrame, from_=1, to=100, orient=tk.HORIZONTAL, label="Object size")
+        '''self.objectSizeSlider = tk.Scale(self.interactiveFrame, from_=1, to=100, orient=tk.HORIZONTAL, label="Object size")
         self.objectSizeSlider.set(5)
         self.objectSizeSlider.pack()
-        self.objectSizeSlider.bind("ObjectSizeSlider", self.handleSizeUpdate)
+        self.objectSizeSlider.bind("ObjectSizeSlider", self.handleSizeUpdate)'''
 
         #run rate
         self.runRateSlider = tk.Scale(self.interactiveFrame, from_=0.05, to=2, orient=tk.HORIZONTAL, label="Run rate")

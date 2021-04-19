@@ -8,7 +8,7 @@ from PIL import Image as im
 from random import random
 
 class PlaneManager:
-    def __init__(self, movers, domainSize, noise, peakThreshold = 1e-2, resolution = 5, singlePoint = True, display=False):
+    def __init__(self, movers, domainSize, noise, peakThreshold = 1e-2, resolution = 9, singlePoint = True, display=False):
         self.viz = visualizer.Visualizer()
         self.movers = movers
         self.domainSize = domainSize
@@ -16,8 +16,9 @@ class PlaneManager:
         self.peakThreshold = peakThreshold
         self.resolution = resolution
         self.planeQueue = []
-        self.decayWeights = np.array([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
-        self.decayWeights = self.decayWeights/np.sum(self.decayWeights)
+        #self.decayWeights = np.array([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
+        #self.decayWeights = self.decayWeights/np.sum(self.decayWeights)
+        self.decayWeights = np.array([1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0])
         self.timeStep = 0
         self.noise = noise
         print("Decay weight sum: ", np.sum(self.decayWeights))
@@ -57,15 +58,12 @@ class PlaneManager:
             for i in range(randomNumberOfPoints):
                 newPlane[int(random() * 100), int(random() * 100)] = 1
         self.addPlane(newPlane)
-        print("New plane!")
         print("Nonzero values in new Plane: ", np.count_nonzero(newPlane)) 
-        #img = im.fromarray(newPlane, 'RGB')
-        #img.show()
 
     #establish a weighting scheme to ensure there is a decay to the weights of the oldest
     def mergePlanes(self, N, size, threshold):
         merger = pm.PlaneMerger(self.planeQueue, self.decayWeights)
-        mergedPlanes = merger.mergePlanes()
+        mergedPlanes = merger.mergePlanes(self.resolution)
         pf = peakFinder.PeakFinder(mergedPlanes)
         secondDerivImage = pf.getSecondDerivative()
         print("Nonzero values in second derivative: ", np.count_nonzero(secondDerivImage)) 
