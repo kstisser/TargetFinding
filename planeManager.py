@@ -16,9 +16,9 @@ class PlaneManager:
         self.peakThreshold = peakThreshold
         self.resolution = resolution
         self.planeQueue = []
-        #self.decayWeights = np.array([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
-        #self.decayWeights = self.decayWeights/np.sum(self.decayWeights)
-        self.decayWeights = np.array([1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0])
+        w = np.array([0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
+        self.decayWeights = w/np.sum(w)
+        #self.decayWeights = np.array([1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0])
         self.timeStep = 0
         self.noise = noise
         print("Decay weight sum: ", np.sum(self.decayWeights))
@@ -61,9 +61,9 @@ class PlaneManager:
         print("Nonzero values in new Plane: ", np.count_nonzero(newPlane)) 
 
     #establish a weighting scheme to ensure there is a decay to the weights of the oldest
-    def mergePlanes(self, N, size, threshold):
+    def mergePlanes(self, N, size, threshold, simpleVersion=False):
         merger = pm.PlaneMerger(self.planeQueue, self.decayWeights)
-        mergedPlanes = merger.mergePlanes(self.resolution)
+        mergedPlanes = merger.mergePlanes(self.resolution, simpleVersion)
         pf = peakFinder.PeakFinder(mergedPlanes)
         secondDerivImage = pf.getSecondDerivative()
         print("Nonzero values in second derivative: ", np.count_nonzero(secondDerivImage)) 
@@ -74,6 +74,6 @@ class PlaneManager:
         areas = None
         print(peaks)
         if len(peaks) > 0:
-            quadrature = qc.QuadratureCalculator(self.planeQueue, mergedPlanes, peaks, self.resolution, self.decayWeights)
-            areas = quadrature.getAreas(size, N)
+            quadrature = qc.QuadratureCalculator(self.planeQueue, mergedPlanes, peaks, self.resolution, self.decayWeights, simpleVersion)
+            areas = quadrature.getAreas(size, N, simpleVersion)
         return self.planeQueue, mergedPlanes, secondDerivImage, peaks, areas
