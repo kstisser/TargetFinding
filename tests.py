@@ -29,6 +29,8 @@ if __name__ == "__main__":
 
     resolutions = [3, 9, 18]
     for i in range(len(resolutions)):
+        if resolutions[i] == 18:
+            size = 8
         #True enforces simple version of f = 1 function
         mergedPlanes = merger.mergePlanes(resolutions[i], simpleVersion=True)
         pf = peakFinder.PeakFinder(mergedPlanes)
@@ -82,7 +84,7 @@ if __name__ == "__main__":
     #make the gaussian distribution for one target at one time step
     merger = planeMerger.PlaneMerger([plane], weights)
     expectedArea = 1
-    size = 5
+    size = 4
 
     cubicArea = []
     newCotesArea = []
@@ -94,6 +96,8 @@ if __name__ == "__main__":
 
     resolutions = [3, 9, 18]
     for i in range(len(resolutions)):
+        if resolutions[i] == 18:
+            size = 8
         #True enforces simple version of f = 1 function
         mergedPlanes = merger.mergePlanes(resolutions[i], simpleVersion=False)
         pf = peakFinder.PeakFinder(mergedPlanes)

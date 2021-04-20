@@ -102,13 +102,14 @@ class PlaneMerger:
                     #fill in twice as many values for higher resolution (added together as we're not changing dimensions)
                     xmod1 = int(point[1] + (point[1] - x - 1)*2 + 1)
                     ymod1 = int(point[0] + (point[0] - y - 1)*2 + 1)
-                    val1 = 1 if simpleVersion else gaussianEquation.getGaussianDistributionValue(point, x, y, stddev)/4.0
+                    val1 = 0.5 if simpleVersion else gaussianEquation.getGaussianDistributionValue(point, x, y, stddev)/8.0
+                    self.gaussianMixturePlanes[planeIdx,ymod1,xmod1] = val1
 
                     xmod2 = int(point[1] + (point[1] - x - 1)*2 + 2)
                     ymod2 = int(point[0] + (point[0] - y - 1)*2 + 2)
-                    val2 = 1 if simpleVersion else gaussianEquation.getGaussianDistributionValue(point, (x+0.5), (y+0.5), stddev)/4.0
-                    val = (val1 + val2)/2
-                    self.gaussianMixturePlanes[planeIdx,y,x] = val
+                    val2 = 0.5 if simpleVersion else gaussianEquation.getGaussianDistributionValue(point, (x+0.5), (y+0.5), stddev)/8.0
+                    val = (val1 + val2)
+                    self.gaussianMixturePlanes[planeIdx,ymod2,xmod2] = val2
                 else:
                     print("Error! don't recognize res value!", self.res)
 

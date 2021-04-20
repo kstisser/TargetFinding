@@ -74,6 +74,6 @@ class PlaneManager:
         areas = None
         print(peaks)
         if len(peaks) > 0:
-            quadrature = qc.QuadratureCalculator(self.planeQueue, mergedPlanes, peaks, self.resolution, self.decayWeights, simpleVersion)
-            areas = quadrature.getAreas(size, N, simpleVersion)
+            quadrature = qc.QuadratureCalculator(self.planeQueue, mergedPlanes, peaks, self.resolution, self.decayWeights)
+            areas = quadrature.getAreas(size, N, simpleVersion=simpleVersion)
         return self.planeQueue, mergedPlanes, secondDerivImage, peaks, areas

@@ -8,6 +8,7 @@ class PeakFinder:
     def __init__(self, mergedPlane):
         self.mergedPlane = mergedPlane
         self.viz = visualizer.Visualizer()
+        self.peakThresholdToKeep = 0.4
 
     def getSecondDerivative(self):
         self.secondDer = laplace(self.mergedPlane)
@@ -34,6 +35,13 @@ class PeakFinder:
         return self.peaks
 
     def mergePeaks(self):
+        #eliminate any peaks that are too low to be worth clustering
+        '''newPeaks = []
+        for peak in self.peaks:
+            if self.mergedPlane[peak[0],peak[1]] >= self.peakThresholdToKeep:
+                newPeaks.append(peak)
+        self.peaks = np.array(newPeaks)'''
+
         #use DBSCAN to cluster
         maximumDistanceBetweenPoints = 10
         minNumPoints = 5

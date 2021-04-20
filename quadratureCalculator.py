@@ -41,6 +41,7 @@ class QuadratureCalculator:
         else:
             print("Error, don't recognize N!", N)
 
+        print("Looking for area with size: ", size)
         for p in self.peaks:
             upperLeft, lowerRight = self.getCorners(p, size)
             cubicSum = self.getCubicArea(upperLeft, lowerRight) if computeCubic else 0
@@ -106,9 +107,9 @@ class QuadratureCalculator:
                     print("Updated sum: ", sum)
 
         print("X range: ", xRange)   
-        sum = sum * (xRange*yRange/(2*self.N))
+        #sum = sum * (xRange*yRange/(2*self.N))
         #sum = sum * Xincrement * Yincrement/2.0
-        #sum = sum * (xRange/2.0) * (yRange/2.0)
+        sum = sum * (xRange/2.0) * (yRange/2.0)
         totalWeights = np.sum(self.decayWeights)
         currentWeight = self.decayWeights[-1]
         print("New weighted sum: ", weightSum/totalWeights)

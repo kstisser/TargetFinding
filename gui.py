@@ -16,7 +16,7 @@ class GuiManager:
         self.runRate = runRate
         self.resolution = 18
         self.threshold = 0.5
-        self.size = 5
+        self.size = 8 if self.resolution == 18 else 4
         self.tkGui = tk.Tk()
         w, h = self.tkGui.winfo_screenwidth(), self.tkGui.winfo_screenheight()
         self.tkGui.geometry("%dx%d+0+0" % (w, h))
@@ -237,7 +237,7 @@ class GuiManager:
         self.thresholdSlider.bind("ThresholdSlider", self.handleThresholdUpdate)'''
 
         #resolution slider
-        self.resolutionSlider = tk.Scale(self.interactiveFrame, from_=8, to=32, tickinterval=8, orient=tk.HORIZONTAL, label="Resolution (N)")
+        self.resolutionSlider = tk.Scale(self.interactiveFrame, from_=3, to=18, tickinterval=3, orient=tk.HORIZONTAL, label="Resolution (N)")
         self.resolutionSlider.set(self.resolution)
         self.resolutionSlider.pack()
         self.resolutionSlider.bind("ResolutionSlider", self.handleResolutionUpdate)
