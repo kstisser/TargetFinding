@@ -54,9 +54,9 @@ class PlaneManager:
             #TODO if using multiple points for a moving object, add those based on their direction
         #if using noise, add a few other random points
         if self.noise:
-            randomNumberOfPoints = int(random() * 200)
+            randomNumberOfPoints = int(random() * 100)
             for i in range(randomNumberOfPoints):
-                newPlane[int(random() * 100), int(random() * 100)] = 1
+                newPlane[int(random() * self.domainSize[0]), int(random() * self.domainSize[1])] = 1
         self.addPlane(newPlane)
         print("Nonzero values in new Plane: ", np.count_nonzero(newPlane)) 
 

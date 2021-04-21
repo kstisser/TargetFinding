@@ -1,0 +1,17 @@
+{
+    "domainSize": [100,100],
+    "objects": [
+    {"size":1,
+    "startingPixel":[10,10],
+    "movementType":"Linear",
+    "movementDirection": "DiagDownRight"},
+    {"size":3,
+    "startingPixel":[70,70],
+    "movementType":"Linear",
+    "movementDirection": "DiagUpLeft"},
+    {"size":5,
+    "startingPixel":[20,10],
+    "movementType":"Linear",
+    "movementDirection": "DiagDownRight"}
+    ]
+}

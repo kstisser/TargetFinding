@@ -16,7 +16,7 @@ class QuadratureCalculator:
         self.peaks = peaks
         self.peaksQuadratureDic = {}
         #print("dic type: ", type(self.peaksQuadratureDic))
-        self.separatedPlanes = separatedPlanes
+        self.separatedPlanes = np.array(separatedPlanes)
         self.decayWeights = weights
         self.N = N
         #print("starting with merged planes size: ", self.mergedPlanes.shape)
@@ -51,14 +51,21 @@ class QuadratureCalculator:
         return self.peaksQuadratureDic
 
     def getCubicArea(self, upperLeft, lowerRight):
+        #can't use this as may not take the full range if at the edge of the image, and N inforced when drawing points
+        #h = ((lowerRight[1]-upperLeft[1])/self.N) *((lowerRight[0]-upperLeft[0])/self.N)
         sum = 0
+        xRangeCount = 0
+        yRangeCount = 0
         for y in range(upperLeft[0], lowerRight[0] + 1):
-            for x in range(upperLeft[1], lowerRight[1] + 1):
-                if self.isInRange(y,0) and self.isInRange(x,1):
-                    sum = sum + self.mergedPlanes[y,x]
-                else:
-                    print("Trying to get area outside bounds!")
-        sum = sum * self.dx * self.dy
+            if self.isInRange(y,0):
+                yRangeCount = yRangeCount + 1
+                for x in range(upperLeft[1], lowerRight[1] + 1):
+                    if self.isInRange(x,1):
+                        sum = sum + self.mergedPlanes[y,x]
+                        xRangeCount = xRangeCount + 1
+                    else:
+                        print("Trying to get area outside bounds!")
+        sum = sum * self.dx * self.dy 
         print("Got cubic area of: ", sum)
         return sum
 
@@ -68,7 +75,7 @@ class QuadratureCalculator:
         stddev = 2
         print("Getting number of weights: ", len(weights), " with sum: ", np.sum(np.array(weights)))
 
-        sum = 0
+        totalSum = 0
         #we need i and j to move between the domain given, so we'll adjust to make this applicable
         xRange = float(lowerRight[1] - upperLeft[1] + 1)
         yRange = float(lowerRight[0] - upperLeft[0] + 1)
@@ -78,46 +85,54 @@ class QuadratureCalculator:
         yMax = lowerRight[0]
         Xincrement = xRange/self.N
         Yincrement = yRange/self.N
+        gaussianSpan = 4
 
-        print("Length of peaks: ", len(self.peaks))
-        for peak in self.peaks:
-            #peak gives the mean of the gaussian distribution, check if it's within the domain we're adding
-            if self.isWithinDomain(peak, upperLeft, lowerRight):
-                weightSum = 0
-                print("Length of separated planes: ", len(self.separatedPlanes))
-                for w in range(len(self.separatedPlanes)):
-                    #layerSum = 0
-                    if self.hasPointNearThis(w, peak):
-                        weightSum = weightSum + self.decayWeights[w]
-                    for i in range(len(weights)):
-                        xConverted = xMin + (((xs[i] + 1)/2.0)*xRange)
-                        for j in range(len(weights)):
-                            yConverted = yMin + (((xs[j] + 1)/2.0)*yRange)
-                            #print("X converted: ", xConverted, ", Y Converted: ", yConverted, "X init: ", xs[i], ", Y init: ", xs[j])
-                            if simpleVersion:
-                                #print("Doing simple version!")
-                                newVal = 1*weights[i]
-                            else:
-                                newVal = weights[i] * gaussianEquation.getGaussianDistributionValue(peak, xConverted, yConverted, stddev)
-                            #layerSum = layerSum + newVal
-                            sum = newVal + sum
-                            #print("New val: ", newVal, " with new sum: ", sum)
-                            #print("New layer sum: ", layerSum)
-                    #sum = (layerSum * self.decayWeights[w]) + sum
-                    print("Updated sum: ", sum)
-
-        print("X range: ", xRange)   
+        #need to add a gaussian for each plane we find a point within this domain space
+        for planeIdx in range(len(self.separatedPlanes)):
+            planeSum = 0
+            for xIdx in range(upperLeft[1],lowerRight[1]+1):
+                for yIdx in range(upperLeft[0], lowerRight[0]+1):
+                    if self.separatedPlanes[planeIdx, yIdx, xIdx] == 1:
+                        peak = (yIdx, xIdx)
+                        peakVal = 0
+                        #if there is a peak here, find the area of this gaussian, and add it to the sum with the weight of the plane
+                        #get new bounds in case it's off center
+                        gxMin = max(xMin, xIdx - gaussianSpan)
+                        gyMin = max(yMin, yIdx - gaussianSpan)
+                        gxMax = min(xMax, xIdx + gaussianSpan)
+                        gyMax = min(yMax, yIdx + gaussianSpan)
+                        gxRange = float(gxMax - gxMin + 1)
+                        gyRange = float(gyMax - gyMin + 1)
+                        print("Total weights: ", len(weights))
+                        for i in range(len(weights)):
+                            xConverted = gxMin + (((xs[i] + 1)/2.0)*gxRange)
+                            for j in range(len(weights)):
+                                yConverted = gyMin + (((xs[j] + 1)/2.0)*gyRange)
+                                print("X converted: ", xConverted, ", Y Converted: ", yConverted, "X init: ", xs[i], ", Y init: ", xs[j])
+                                if simpleVersion:
+                                    #print("Doing simple version!")
+                                    newVal = 1*weights[i]
+                                else:
+                                    newVal = weights[i] * gaussianEquation.getGaussianDistributionValue(peak, xConverted, yConverted, stddev)
+                                peakVal = newVal + peakVal
+                        print("Peak total: ", peakVal, " xRange: ", gxRange, ", yRange: ", gyRange)
+                        peakVal = peakVal * gxRange/2.0 * gyRange/2.0
+                        print("Updated peak sum: ", peakVal)
+                        #add to plane
+                        planeSum = planeSum + peakVal
+            #multiply plane sum by plane weight
+            planeSum = planeSum * self.decayWeights[planeIdx]
+            #add to total sum
+            totalSum = totalSum + planeSum
+            
+        #sum = sum/2.0  
         #sum = sum * (xRange*yRange/(2*self.N))
         #sum = sum * Xincrement * Yincrement/2.0
-        sum = sum * (xRange/2.0) * (yRange/2.0)
-        totalWeights = np.sum(self.decayWeights)
-        currentWeight = self.decayWeights[-1]
-        print("New weighted sum: ", weightSum/totalWeights)
+        #sum = sum * (xRange/2.0) * (yRange/2.0)
         #we want to give the weight of the rest of the frames that had a point near it
         #sum = sum * self.dx * self.dy
-        sum = sum * (weightSum/totalWeights) * len(self.separatedPlanes)
-        print("Got Gaussian Quadrature area of: ", sum)
-        return sum
+        print("Got Gaussian Quadrature area of: ", totalSum)
+        return totalSum
 
     def hasPointNearThis(self, planeIndex, point):
         if planeIndex >= len(self.separatedPlanes):
@@ -140,7 +155,9 @@ class QuadratureCalculator:
 
     #Simpson's rule over one subinterval, adapted for 2d to cover a 3x3 space
     def getNewCotesArea(self, upperLeft, lowerRight):
+        #h = ((lowerRight[1]-upperLeft[1])/self.N) *((lowerRight[0]-upperLeft[0])/self.N)
         sum = 0
+        multiplier = 3 if self.N == 3 else 1
         for y in range(upperLeft[0], lowerRight[0] + 1):
             for x in range(upperLeft[1], lowerRight[1] + 1):
                 if self.isInRange(y,0) and self.isInRange(x,1):

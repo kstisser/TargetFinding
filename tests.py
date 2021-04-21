@@ -8,17 +8,6 @@ if __name__ == "__main__":
     ###########################################################################################
     #########First test: simple F = 1 plot (error shows 1e-13, so looks big but is small)######
     ###########################################################################################
-    #establish one target in the center at different comparable resolutions and Ns
-    plane = np.zeros((100,100))
-    plane[50,50] = 1
-    peakThreshold = 1e-2
-    weights = [1]
-
-    #make the gaussian distribution for one target at one time step
-    merger = planeMerger.PlaneMerger([plane], weights)
-    expectedArea = 81
-    size = 4
-
     cubicArea = []
     newCotesArea = []
     gaussianQuadratureArea = [] 
@@ -27,10 +16,26 @@ if __name__ == "__main__":
     newCotesError = []
     gaussianQuadratureError = []   
 
+    expectedArea = 81
+    peakThreshold = 1e-2
+    weights = [1] 
+
     resolutions = [3, 9, 18]
-    for i in range(len(resolutions)):
+    for i in range(len(resolutions)):      
         if resolutions[i] == 18:
             size = 8
+            #establish one target in the center at different comparable resolutions and Ns
+            plane = np.zeros((200,200))
+            plane[100,100] = 1            
+        else:
+            size = 4
+            #establish one target in the center at different comparable resolutions and Ns
+            plane = np.zeros((100,100))
+            plane[50,50] = 1  
+
+        #make the gaussian distribution for one target at one time step
+        merger = planeMerger.PlaneMerger([plane], weights)                
+
         #True enforces simple version of f = 1 function
         mergedPlanes = merger.mergePlanes(resolutions[i], simpleVersion=True)
         pf = peakFinder.PeakFinder(mergedPlanes)
@@ -76,16 +81,6 @@ if __name__ == "__main__":
     #########Second test: single gaussian plot ################################################
     ###########################################################################################
     #establish one target in the center at different comparable resolutions and Ns
-    plane = np.zeros((100,100))
-    plane[50,50] = 1
-    peakThreshold = 1e-2
-    weights = [1]
-
-    #make the gaussian distribution for one target at one time step
-    merger = planeMerger.PlaneMerger([plane], weights)
-    expectedArea = 1
-    size = 4
-
     cubicArea = []
     newCotesArea = []
     gaussianQuadratureArea = [] 
@@ -94,10 +89,26 @@ if __name__ == "__main__":
     newCotesError = []
     gaussianQuadratureError = []   
 
+    expectedArea = 1
+    peakThreshold = 1e-2
+    weights = [1] 
+
     resolutions = [3, 9, 18]
-    for i in range(len(resolutions)):
+    for i in range(len(resolutions)):      
         if resolutions[i] == 18:
             size = 8
+            #establish one target in the center at different comparable resolutions and Ns
+            plane = np.zeros((200,200))
+            plane[100,100] = 1            
+        else:
+            size = 4
+            #establish one target in the center at different comparable resolutions and Ns
+            plane = np.zeros((100,100))
+            plane[50,50] = 1  
+
+        #make the gaussian distribution for one target at one time step
+        merger = planeMerger.PlaneMerger([plane], weights)  
+
         #True enforces simple version of f = 1 function
         mergedPlanes = merger.mergePlanes(resolutions[i], simpleVersion=False)
         pf = peakFinder.PeakFinder(mergedPlanes)
