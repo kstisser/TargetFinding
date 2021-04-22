@@ -61,7 +61,7 @@ class PlaneManager:
         print("Nonzero values in new Plane: ", np.count_nonzero(newPlane)) 
 
     #establish a weighting scheme to ensure there is a decay to the weights of the oldest
-    def mergePlanes(self, N, size, threshold, simpleVersion=False):
+    def mergePlanes(self, N, size, threshold, simpleVersion=False, scenarioName="Name"):
         merger = pm.PlaneMerger(self.planeQueue, self.decayWeights)
         mergedPlanes = merger.mergePlanes(self.resolution, simpleVersion)
         pf = peakFinder.PeakFinder(mergedPlanes)
@@ -75,5 +75,5 @@ class PlaneManager:
         print(peaks)
         if len(peaks) > 0:
             quadrature = qc.QuadratureCalculator(self.planeQueue, mergedPlanes, peaks, self.resolution, self.decayWeights)
-            areas = quadrature.getAreas(size, N, simpleVersion=simpleVersion)
+            areas = quadrature.getAreas(size, N, simpleVersion=simpleVersion, scenarioName=scenarioName)
         return self.planeQueue, mergedPlanes, secondDerivImage, peaks, areas

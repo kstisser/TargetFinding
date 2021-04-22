@@ -30,7 +30,7 @@ class QuadratureCalculator:
         self.gaussianQuadratureSum  = 0
         self.newCodesSum = 0
 
-    def getAreas(self, size, N, computeCubic=True, computeGaussianQuadrature=True, computeNewCotes=True, simpleVersion=False):
+    def getAreas(self, size, N, computeCubic=True, computeGaussianQuadrature=True, computeNewCotes=True, simpleVersion=False, scenarioName="Name"):
         self.initializeDicToZero()
         self.N = N
         if N == 3:
@@ -50,7 +50,7 @@ class QuadratureCalculator:
             upperLeft, lowerRight = self.getCorners(p, size)
             cubicSum, cubicTime = self.getCubicArea(upperLeft, lowerRight) if computeCubic else 0
             ncSum, ncTime = self.getNewCotesArea(upperLeft, lowerRight) if computeNewCotes else 0
-            gqSum, gqTime = self.getGaussianQuadratureArea(upperLeft, lowerRight, simpleVersion) if computeGaussianQuadrature else 0
+            gqSum, gqTime = self.getGaussianQuadratureArea(upperLeft, lowerRight, simpleVersion, scenarioName) if computeGaussianQuadrature else 0
             self.peaksQuadratureDic[p] = QuadratureSums(cubicSum, ncSum, gqSum, cubicTime, ncTime, gqTime)
         return self.peaksQuadratureDic
 
@@ -75,7 +75,7 @@ class QuadratureCalculator:
         timeTook = time.time() - startTime
         return sum, timeTook
 
-    def getGaussianQuadratureArea(self, upperLeft, lowerRight, simpleVersion=False):
+    def getGaussianQuadratureArea(self, upperLeft, lowerRight, simpleVersion=False, scenarioName="Name"):
         startTime = time.time()
         gqlookup = gaussianQuadratureLookup.GaussianQuadratureLookup(self.N)
         weights, xs = gqlookup.getWeightsAndVariables()
@@ -93,6 +93,7 @@ class QuadratureCalculator:
         Xincrement = xRange/self.N
         Yincrement = yRange/self.N
         gaussianSpan = 4
+        singleScenario = True if scenarioName == "SingleStatic" else False
 
         #need to add a gaussian for each plane we find a point within this domain space
         for planeIdx in range(len(self.separatedPlanes)):
@@ -123,7 +124,8 @@ class QuadratureCalculator:
                                     newVal = weights[i] * gaussianEquation.getGaussianDistributionValue(peak, xConverted, yConverted, stddev)
                                 peakVal = newVal + peakVal
                         #print("Peak total: ", peakVal, " xRange: ", gxRange, ", yRange: ", gyRange)
-                        peakVal = peakVal * gxRange/2.0 * gyRange/2.0 * self.getChangeInIntegralMultiplier(gxMin, gxMax) * self.getChangeInIntegralMultiplier(gyMin, gyMax) / (self.N*23.855)
+                        if singleScenario:
+                            peakVal = peakVal * gxRange/2.0 * gyRange/2.0 * self.getChangeInIntegralMultiplier(gxMin, gxMax) * self.getChangeInIntegralMultiplier(gyMin, gyMax) / (self.N*23.855)
                         #print("Updated peak sum: ", peakVal)
                         #add to plane
                         planeSum = planeSum + peakVal

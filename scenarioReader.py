@@ -7,7 +7,11 @@ class ScenarioReader:
         with open(jsonFile) as f:
             self.scenario = json.load(f)
         self.domainSize = self.scenario["domainSize"] if "domainSize" in self.scenario else [100,100]
+        self.name = self.scenario["name"] if "name" in self.scenario else "Name"
         self.movers = []
+
+    def getScenarioName(self):
+        return self.name
 
     def getMoversForPlane(self):
         for mov in self.scenario['objects']:

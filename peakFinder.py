@@ -8,7 +8,7 @@ class PeakFinder:
     def __init__(self, mergedPlane):
         self.mergedPlane = mergedPlane
         self.viz = visualizer.Visualizer()
-        self.peakThresholdToKeep = 0.010
+        self.peakThresholdToKeep = 0.015
 
     def getSecondDerivative(self):
         self.secondDer = laplace(self.mergedPlane)

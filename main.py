@@ -22,10 +22,11 @@ if __name__ == "__main__":
         print(fileName)
         if(os.path.exists(fileName) and os.path.isfile(fileName)):
             sr = scenarioReader.ScenarioReader(fileName)
+            name = sr.getScenarioName()
             movers = sr.getMoversForPlane()  
             domainSize = sr.domainSize          
 
-            guiManager = gui.GuiManager(movers, domainSize, runRate, noise)
+            guiManager = gui.GuiManager(movers, domainSize, runRate, noise=noise, name=name)
             guiManager.start()
         else:
             print("Error! Your entry does not seem to be a real file, try again! ", fileName)

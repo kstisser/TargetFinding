@@ -1,4 +1,5 @@
 {
+    "name": "SingleStatic",
     "domainSize": [100,100],
     "objects": [
     {"size":1,

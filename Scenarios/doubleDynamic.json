@@ -1,4 +1,5 @@
 {
+    "name": "DoubleDynamic",
     "domainSize": [100,100],
     "objects": [
     {"size":1,
@@ -8,7 +9,7 @@
     {"size":3,
     "startingPixel":[70,60],
     "movementType":"Linear",
-    "movementDirection": "VerticalDown"},
+    "movementDirection": "Static"},
     {"size":5,
     "startingPixel":[30,70],
     "movementType":"Linear",

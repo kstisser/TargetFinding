@@ -12,7 +12,7 @@ from scipy.stats import multivariate_normal
 import cv2
 
 class GuiManager:
-    def __init__(self, movers, domainSize, runRate, noise=False):
+    def __init__(self, movers, domainSize, runRate, noise=False, name="Name"):
         self.runRate = runRate
         self.resolution = 9
         if self.resolution == 18:
@@ -33,6 +33,7 @@ class GuiManager:
         self.Y = np.arange(0, domainSize[0])
         self.X, self.Y = np.meshgrid(self.X, self.Y)
         self.noise = noise
+        self.scenarioName = name
         
     def runGUI(self):
         self.tkGui.mainloop()
@@ -45,7 +46,7 @@ class GuiManager:
             s = self.size
             t = self.threshold
             rate = self.runRate
-            separatedPlanes, mergedPlanes, secondDerivative, peaks, areas = self.pm.mergePlanes(r, s, t)
+            separatedPlanes, mergedPlanes, secondDerivative, peaks, areas = self.pm.mergePlanes(r, s, t, scenarioName=self.scenarioName)
             self.updatePlots(separatedPlanes, mergedPlanes, secondDerivative, peaks, areas)
             self.tkGui.update()
             #sleep amount of time still needed after processing to get to the run rate
