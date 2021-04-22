@@ -143,21 +143,25 @@ class GuiManager:
         #probability of objects- cubic area
         self.axProbCubic = self.fig.add_subplot(3, 4, 4, projection='3d')
         probCubicImg = np.zeros(mergedPlanes.shape)
-        self.axProbCubic.set_title("Cube Targets Thresholded")
 
         #probability of objects- NewCotes area
         self.axProbNewCotes = self.fig.add_subplot(3, 4, 8, projection='3d')
         probNewCotesImg = np.zeros(mergedPlanes.shape)
-        self.axProbNewCotes.set_title("New Cotes Targets Thresholded")
 
         #probability of objects- Gaussian Quadrature
         self.axProbGaussianQuadrature = self.fig.add_subplot(3, 4, 12, projection='3d')
         probGaussianQuadratureImg = np.zeros(mergedPlanes.shape)
-        self.axProbGaussianQuadrature.set_title("Gaussian Quadrature Targets Thresholded")
 
+        cubeTime = 0
+        ncTime = 0
+        gqTime = 0
         if areas is not None:
             #loop through areas stored within each of the keys, and draw on appropriate plane
             for peakKey in areas:
+                cubeTime = cubeTime + areas[peakKey].cubeTime
+                ncTime = ncTime + areas[peakKey].newCotesTime
+                gqTime = gqTime + areas[peakKey].gaussianQuadratureTime
+
                 cubicArea = areas[peakKey].cubeSum
                 newCotesArea = areas[peakKey].newCotesSum
                 gaussianQuadratureArea = areas[peakKey].gaussianQuadratureSum
@@ -181,6 +185,13 @@ class GuiManager:
                 probCubicImg[y1:y2, x1:x2] = cubicArea
                 probNewCotesImg[y1:y2, x1:x2] = newCotesArea
                 probGaussianQuadratureImg[y1:y2, x1:x2] = gaussianQuadratureArea
+
+        cubeTime = 0 if areas is None else cubeTime/len(areas)
+        ncTime = 0 if areas is None else ncTime/len(areas)
+        gqTime = 0 if areas is None else gqTime/len(areas)
+        self.axProbCubic.set_title(("Cube Targets Thresholded " + str(self.truncate(cubeTime,4))))
+        self.axProbNewCotes.set_title(("NC Targets Thresholded " + str(self.truncate(ncTime,6))))
+        self.axProbGaussianQuadrature.set_title(("GQ Targets Thresholded " + str(self.truncate(gqTime,4))))
 
         self.axCubes.imshow(cubeAreaImg)
         self.axNewCotes.imshow(newCotesAreaImg)

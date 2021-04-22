@@ -3,12 +3,16 @@ import defs
 import gaussianQuadratureLookup
 import gaussianEquation
 import math
+import time
 
 class QuadratureSums:
-    def __init__(self, cube, gaussianQuadrature, newCotes):
+    def __init__(self, cube, newCotes, gaussianQuadrature, cubeTime, newCotesTime, gaussianTime):
         self.cubeSum = cube
         self.newCotesSum = newCotes
         self.gaussianQuadratureSum = gaussianQuadrature
+        self.cubeTime = cubeTime
+        self.newCotesTime = newCotesTime
+        self.gaussianQuadratureTime = gaussianTime
 
 class QuadratureCalculator:
     def __init__(self, separatedPlanes, mergedPlanes, peaks, N, weights):
@@ -44,13 +48,14 @@ class QuadratureCalculator:
         print("Looking for area with size: ", size)
         for p in self.peaks:
             upperLeft, lowerRight = self.getCorners(p, size)
-            cubicSum = self.getCubicArea(upperLeft, lowerRight) if computeCubic else 0
-            ncSum = self.getNewCotesArea(upperLeft, lowerRight) if computeNewCotes else 0
-            gqSum = self.getGaussianQuadratureArea(upperLeft, lowerRight, simpleVersion) if computeGaussianQuadrature else 0
-            self.peaksQuadratureDic[p] = QuadratureSums(cubicSum, gqSum, ncSum)
+            cubicSum, cubicTime = self.getCubicArea(upperLeft, lowerRight) if computeCubic else 0
+            ncSum, ncTime = self.getNewCotesArea(upperLeft, lowerRight) if computeNewCotes else 0
+            gqSum, gqTime = self.getGaussianQuadratureArea(upperLeft, lowerRight, simpleVersion) if computeGaussianQuadrature else 0
+            self.peaksQuadratureDic[p] = QuadratureSums(cubicSum, ncSum, gqSum, cubicTime, ncTime, gqTime)
         return self.peaksQuadratureDic
 
     def getCubicArea(self, upperLeft, lowerRight):
+        startTime = time.time()
         #can't use this as may not take the full range if at the edge of the image, and N inforced when drawing points
         #h = ((lowerRight[1]-upperLeft[1])/self.N) *((lowerRight[0]-upperLeft[0])/self.N)
         sum = 0
@@ -67,9 +72,11 @@ class QuadratureCalculator:
                         print("Trying to get area outside bounds!")
         sum = sum * self.dx * self.dy 
         print("Got cubic area of: ", sum)
-        return sum
+        timeTook = time.time() - startTime
+        return sum, timeTook
 
     def getGaussianQuadratureArea(self, upperLeft, lowerRight, simpleVersion=False):
+        startTime = time.time()
         gqlookup = gaussianQuadratureLookup.GaussianQuadratureLookup(self.N)
         weights, xs = gqlookup.getWeightsAndVariables()
         stddev = 2
@@ -108,16 +115,16 @@ class QuadratureCalculator:
                             xConverted = gxMin + (((xs[i] + 1)/2.0)*gxRange)
                             for j in range(len(weights)):
                                 yConverted = gyMin + (((xs[j] + 1)/2.0)*gyRange)
-                                print("X converted: ", xConverted, ", Y Converted: ", yConverted, "X init: ", xs[i], ", Y init: ", xs[j])
+                                #print("X converted: ", xConverted, ", Y Converted: ", yConverted, "X init: ", xs[i], ", Y init: ", xs[j])
                                 if simpleVersion:
                                     #print("Doing simple version!")
                                     newVal = 1*weights[i]
                                 else:
                                     newVal = weights[i] * gaussianEquation.getGaussianDistributionValue(peak, xConverted, yConverted, stddev)
                                 peakVal = newVal + peakVal
-                        print("Peak total: ", peakVal, " xRange: ", gxRange, ", yRange: ", gyRange)
-                        peakVal = peakVal * gxRange/2.0 * gyRange/2.0
-                        print("Updated peak sum: ", peakVal)
+                        #print("Peak total: ", peakVal, " xRange: ", gxRange, ", yRange: ", gyRange)
+                        peakVal = peakVal * gxRange/2.0 * gyRange/2.0 * self.getChangeInIntegralMultiplier(gxMin, gxMax) * self.getChangeInIntegralMultiplier(gyMin, gyMax) / (self.N*23.855)
+                        #print("Updated peak sum: ", peakVal)
                         #add to plane
                         planeSum = planeSum + peakVal
             #multiply plane sum by plane weight
@@ -132,7 +139,17 @@ class QuadratureCalculator:
         #we want to give the weight of the rest of the frames that had a point near it
         #sum = sum * self.dx * self.dy
         print("Got Gaussian Quadrature area of: ", totalSum)
-        return totalSum
+        timeTook = time.time() - startTime
+        return totalSum, timeTook
+
+    def getChangeInIntegralMultiplier(self, a, b):
+        #val = ( (a*b) - (a*a) - (b*b) + (a*b) )/(a-b)
+        #val = (-1/(a-b) + 1/(b-a))
+        #val = np.sqrt((math.pi)**self.N)
+        val = (b-a)/2
+        print("Val: ", val)
+        #return val/(1.628*self.N)
+        return val
 
     def hasPointNearThis(self, planeIndex, point):
         if planeIndex >= len(self.separatedPlanes):
@@ -155,6 +172,7 @@ class QuadratureCalculator:
 
     #Simpson's rule over one subinterval, adapted for 2d to cover a 3x3 space
     def getNewCotesArea(self, upperLeft, lowerRight):
+        startTime = time.time()
         #h = ((lowerRight[1]-upperLeft[1])/self.N) *((lowerRight[0]-upperLeft[0])/self.N)
         sum = 0
         multiplier = 3 if self.N == 3 else 1
@@ -195,7 +213,8 @@ class QuadratureCalculator:
                     print("Trying to get area outside bounds!")
         sum = sum * self.dx * self.dy
         print("Got new cotes area of: ", sum)
-        return sum
+        timeTook = time.time() - startTime
+        return sum, timeTook
 
     def isInRangeOfDomain(self, point, axis, upperLeft, lowerRight):
         if (point >= upperLeft[axis]) and (point < lowerRight[axis]):   
