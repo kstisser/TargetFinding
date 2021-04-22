@@ -4,7 +4,7 @@ Finds targets using gaussian density functions and quadrature techniques
 
 To run the program pick a scenario in the scenario folder, or make your own, and run:
 
-python main.py <ScenarioFilePath>
+python main.py ScenarioFilePath
 
 For the demo displayed in the presentation I used the following 4 commands:
 
